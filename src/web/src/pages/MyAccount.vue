@@ -1,39 +1,71 @@
 <template>
     <div :class="['account-container', darkMode ? 'dark-mode' : 'light-mode']">
-      <b-card class="account-card">
-        <h2 class="text-center">My Account</h2>
-        <b-row class="justify-content-center">
-          <b-col md="4" class="text-center">
-            <b-avatar size="100px" variant="primary">{{ userInitials }}</b-avatar>
-            <p class="username mt-2">{{ user.name }}</p>
-            <b-badge variant="info">{{ user.role || "Student" }}</b-badge>
-          </b-col>
-          <b-col md="8">
-            <b-list-group class="info-list">
-              <b-list-group-item class="info-item">
-                <b-icon icon="envelope" class="mr-2"></b-icon>
-                <strong>Email:</strong> {{ user.email }}
-              </b-list-group-item>
-              <b-list-group-item class="info-item">
-                <b-icon icon="phone" class="mr-2"></b-icon>
-                <strong>Phone:</strong> {{ user.phone || "Not provided" }}
-              </b-list-group-item>
-              <b-list-group-item class="info-item">
-                <b-icon icon="calendar" class="mr-2"></b-icon>
-                <strong>Joined:</strong> {{ user.joinedDate || "N/A" }}
-              </b-list-group-item>
-              <b-list-group-item class="info-item">
-                <b-icon icon="briefcase" class="mr-2"></b-icon>
-                <strong>Role:</strong> {{ user.role || "Student" }}
+      <b-container fluid>
+        <b-row>
+          <!-- Sidebar Navigation -->
+          <b-col md="3" class="sidebar">
+            <h3 class="sidebar-title">My Account</h3>
+            <b-list-group class="sidebar-menu">
+              <b-list-group-item
+                v-for="(section, index) in sections"
+                :key="index"
+                :class="{ active: activeSection === section.name }"
+                @click="activeSection = section.name"
+              >
+                {{ section.label }}
               </b-list-group-item>
             </b-list-group>
           </b-col>
+  
+          <!-- Main Content -->
+          <b-col md="9" class="content-area">
+            <h2>{{ activeSection }}</h2>
+            <div v-if="activeSection === 'Profile'">
+              <b-card class="profile-card">
+                <b-row class="justify-content-center">
+                  <b-col md="4" class="text-center">
+                    <b-avatar size="100px" variant="primary">{{ userInitials }}</b-avatar>
+                    <p class="username mt-2">{{ user.name }}</p>
+                    <b-badge variant="info">{{ user.role || "Student" }}</b-badge>
+                  </b-col>
+                  <b-col md="8">
+                    <b-list-group class="info-list">
+                      <b-list-group-item class="info-item">
+                        <b-icon icon="envelope" class="mr-2"></b-icon>
+                        <strong>Email:</strong> {{ user.email }}
+                      </b-list-group-item>
+                      <b-list-group-item class="info-item">
+                        <b-icon icon="phone" class="mr-2"></b-icon>
+                        <strong>Phone:</strong> {{ user.phone || "Not provided" }}
+                      </b-list-group-item>
+                      <b-list-group-item class="info-item">
+                        <b-icon icon="calendar" class="mr-2"></b-icon>
+                        <strong>Joined:</strong> {{ user.joinedDate || "N/A" }}
+                      </b-list-group-item>
+                    </b-list-group>
+                  </b-col>
+                </b-row>
+                <div class="text-center mt-4">
+                  <b-button variant="primary" @click="editProfile">Edit Profile</b-button>
+                  <b-button variant="danger" class="ml-2" @click="logOut">Log Out</b-button>
+                </div>
+              </b-card>
+            </div>
+  
+            <div v-if="activeSection === 'Student Information'">
+              <b-card class="profile-card">
+                <p>No information found.</p>
+              </b-card>
+            </div>
+  
+            <div v-if="activeSection === 'Settings'">
+              <b-card class="profile-card">
+                <p>No settings found.</p>
+              </b-card>
+            </div>
+          </b-col>
         </b-row>
-        <div class="text-center mt-4">
-          <b-button variant="primary" @click="editProfile">Edit Profile</b-button>
-          <b-button variant="danger" class="ml-2" @click="logOut">Log Out</b-button>
-        </div>
-      </b-card>
+      </b-container>
     </div>
   </template>
   
@@ -43,11 +75,21 @@
   
   export default {
     name: "MyAccount",
+    data() {
+      return {
+        activeSection: "Profile",
+        sections: [
+          { name: "Profile", label: "Profile" },
+          { name: "Student Information", label: "Student Information" },
+          { name: "Settings", label: "Settings" },
+        ],
+      };
+    },
     computed: {
       ...mapGetters({
         user: userTypes.getters.CURRENT_USER_INFO,
         isLoggedIn: userTypes.getters.IS_LOGGED_IN,
-        darkMode: "darkModeState", 
+        darkMode: "darkModeState",
       }),
       userInitials() {
         if (this.user && this.user.name) {
@@ -71,12 +113,11 @@
         }
       },
       editProfile() {
-        alert("Edit profile feature coming soon!");
+        alert("Edit profile feature soon...");
       },
     },
     async mounted() {
       if (!this.user) {
-        console.log("Fetching user data...");
         try {
           await this.$store.dispatch(userTypes.actions.LOAD_SESSION_COOKIE);
         } catch (err) {
@@ -88,65 +129,103 @@
   </script>
   
   <style scoped>
-  /* Default Light Mode Styles */
+  /* Light & Dark Mode Variables */
+  .light-mode {
+    --background-color: #f8f9fa;
+    --sidebar-background: #ffffff;
+    --sidebar-text: #333;
+    --content-background: #ffffff;
+    --card-background: #ffffff;
+    --text-color: #333;
+    --border-color: #e0e0e0;
+  }
+  
+  .dark-mode {
+    --background-color: #121212;
+    --sidebar-background: #1e1e1e;
+    --sidebar-text: #ffffff;
+    --content-background: #1e1e1e;
+    --card-background: #252525;
+    --text-color: #ffffff;
+    --border-color: #444;
+  }
+  
+  /* Main Container */
   .account-container {
     display: flex;
     justify-content: center;
-    align-items: center;
     min-height: 100vh;
-    background: var(--background-light);
+    background: var(--background-color);
     padding: 20px;
     transition: background 0.3s ease-in-out;
   }
   
-  .account-card {
-    width: 600px;
+  /* Sidebar */
+  .sidebar {
+    background: var(--sidebar-background);
     padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    background: var(--card-light);
-    color: var(--text-light);
-    transition: background 0.3s ease-in-out, color 0.3s ease-in-out;
+    border-radius: 10px;
+    height: fit-content;
   }
   
-  .username {
-    font-size: 1.4rem;
+  .sidebar-title {
+    font-size: 1.2rem;
     font-weight: bold;
+    color: var(--text-color);
   }
   
-  .text-center {
-    text-align: center;
+  .sidebar-menu {
+    margin-top: 10px;
   }
   
-  /* Light Mode Variables */
-  .light-mode {
-    --background-light: #f8f9fa;
-    --card-light: #ffffff;
-    --text-light: #333;
-    --info-background: #f1f3f5;
-    --info-border: #d1d1d1;
+  .sidebar-menu .list-group-item {
+    background: var(--sidebar-background);
+    color: var(--sidebar-text);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
   }
   
-  /* Dark Mode Variables */
-  .dark-mode {
-    --background-light: hsl(225, 15%, 16%);
-    --card-light: hsl(225, 15%, 16%);
-    --text-light: #ffffff;
-    --info-background: hsl(225, 25%, 20%);
-    --info-border: hsl(225, 30%, 25%);
+  .sidebar-menu .list-group-item:hover,
+  .sidebar-menu .list-group-item.active {
+    background: var(--card-background);
+    color: var(--text-color);
   }
   
-  /* Card theme to columns */
+  /* Content Area */
+  .content-area {
+    background: var(--content-background);
+    padding: 20px;
+    border-radius: 10px;
+    color: var(--text-color);
+  }
+  
+  /* Profile Card */
+  .profile-card {
+    background: var(--card-background);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    color: var(--text-color);
+  }
+  
+  /* Info List */
   .info-list {
     border-radius: 8px;
     overflow: hidden;
   }
   
   .info-item {
-    background: var(--info-background);
-    color: var(--text-light);
-    border-color: var(--info-border);
+    background: var(--card-background);
+    color: var(--text-color);
+    border-color: var(--border-color);
     transition: background 0.3s ease-in-out, color 0.3s ease-in-out;
+  }
+  
+  /* Username */
+  .username {
+    font-size: 1.4rem;
+    font-weight: bold;
   }
   </style>
   
