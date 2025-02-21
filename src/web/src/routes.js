@@ -6,6 +6,7 @@ const UploadCsvPage = () => import("./pages/UploadCsv");
 const EditSemestersPage = () => import("./pages/EditSemesters");
 const CourseExplorerPage = () => import("./pages/CourseExplorer");
 const CoursePage = () => import("./pages/CoursePage");
+const MyAccount = () => import("./pages/MyAccount");
 const ProfExplorer = () => import("./pages/ProfExplorer");
 const ProfPage = () => import("./pages/ProfPage");
 const DegreeTemplatesPage = () => import("./pages/DegreeTemplates");
@@ -64,6 +65,12 @@ var router = new VueRouter({
           path: "/professor",
           component: ProfExplorer,
           name: "Professors",
+          props: true,
+        },
+        {
+          path: "/account",
+          component: MyAccount,
+          name: "My Account",
           props: true,
         },
         {
