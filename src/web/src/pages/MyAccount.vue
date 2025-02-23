@@ -103,6 +103,7 @@
 <script>
 import { mapGetters, mapActions, mapMutations } from "vuex";
 import { userTypes } from "../store/modules/user";
+import axios from "axios"; //  
 
 export default {
   name: "MyAccount",
@@ -155,35 +156,36 @@ export default {
       this.editableYear = this.user.year || this.currentYear;
       this.showEditModal = true;
     },
-    saveProfile() {
+    async saveProfile() {
       if (this.editableYear < this.currentYear) {
         alert("Year must be the current year or later.");
         return;
       }
-
-      // Save updated major and year in Vuex and localStorage
-      const updatedUser = {
-        ...this.user,
-        major: this.editableMajor,
-        year: this.editableYear,
-      };
-      this.updateUserInfo(updatedUser);
-      localStorage.setItem("userProfile", JSON.stringify(updatedUser));
-
-      // Close modal
-      this.showEditModal = false;
-    },
-  },
-  async mounted() {
-    this.loadUserFromStorage();
-
-    if (!this.user) {
       try {
-        await this.$store.dispatch(userTypes.actions.LOAD_SESSION_COOKIE);
-      } catch (err) {
-        console.error("Error loading user:", err);
+      const response = await axios.post("/api/update_user", {
+          sessionID: this.user.sessionID,
+          major: this.editableMajor,
+          year: this.editableYear,
+          name: this.user.name,
+          email: this.user.email,
+          phone: this.user.phone,
+          newPassword: "unchanged", // Backend requires it, so we send a dummy value
+          degree: this.user.degree,
+        });
+
+        if (response.data.success) {
+          this.$store.commit(userTypes.mutations.SET_USER_INFO, {
+            major: this.editableMajor,
+            year: this.editableYear,
+          });
+          this.showEditModal = false;
+        } else {
+          alert(response.data.errMsg);
+        }
+      } catch (error) {
+        console.error("Error updating profile:", error);
       }
-    }
+    },
   },
 };
 </script>
