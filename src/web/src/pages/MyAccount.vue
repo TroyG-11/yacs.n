@@ -35,12 +35,12 @@
                         <strong>Email:</strong> {{ user.email }}
                       </b-list-group-item>
                       <b-list-group-item class="info-item">
-                        <b-icon icon="phone" class="mr-2"></b-icon>
-                        <strong>Phone:</strong> {{ user.phone || "Not provided" }}
+                        <b-icon icon="major" class="mr-2"></b-icon>
+                        <strong>Major:</strong> {{ user.major}}
                       </b-list-group-item>
                       <b-list-group-item class="info-item">
-                        <b-icon icon="calendar" class="mr-2"></b-icon>
-                        <strong>Joined:</strong> {{ user.joinedDate || "N/A" }}
+                        <b-icon icon="degree" class="mr-2"></b-icon>
+                        <strong>Degree:</strong> {{ user.degree}}
                       </b-list-group-item>
                     </b-list-group>
                   </b-col>
