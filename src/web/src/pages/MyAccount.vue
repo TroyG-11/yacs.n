@@ -84,8 +84,13 @@
           <b-form-input id="major" v-model="editableMajor"></b-form-input>
         </b-form-group>
         <b-form-group label="Year:" label-for="year">
-          <b-form-input id="year" type="number" v-model="editableYear"></b-form-input>
-        </b-form-group>
+          <b-form-input
+            id="year"
+            type="number"
+            v-model.number="editableYear"
+            :min="currentYear"
+          ></b-form-input>
+           </b-form-group>
         <div class="text-right">
           <b-button variant="secondary" @click="showEditModal = false">Cancel</b-button>
           <b-button variant="primary" type="submit" class="ml-2">Save</b-button>
@@ -107,6 +112,7 @@ export default {
       showEditModal: false,
       editableMajor: "",
       editableYear: "",
+      currentYear: new Date().getFullYear(),
       sections: [
         { name: "Profile", label: "Profile" },
         { name: "Student Information", label: "Student Information" },
@@ -146,21 +152,31 @@ export default {
     },
     openEditModal() {
       this.editableMajor = this.user.major || "";
-      this.editableYear = this.user.year || "";
+      this.editableYear = this.user.year || this.currentYear;
       this.showEditModal = true;
     },
     saveProfile() {
-      // Save updated major and year
-      this.updateUserInfo({
+      if (this.editableYear < this.currentYear) {
+        alert("Year must be the current year or later.");
+        return;
+      }
+
+      // Save updated major and year in Vuex and localStorage
+      const updatedUser = {
+        ...this.user,
         major: this.editableMajor,
         year: this.editableYear,
-      });
+      };
+      this.updateUserInfo(updatedUser);
+      localStorage.setItem("userProfile", JSON.stringify(updatedUser));
 
       // Close modal
       this.showEditModal = false;
     },
   },
   async mounted() {
+    this.loadUserFromStorage();
+
     if (!this.user) {
       try {
         await this.$store.dispatch(userTypes.actions.LOAD_SESSION_COOKIE);
