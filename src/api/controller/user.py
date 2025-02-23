@@ -39,7 +39,7 @@ def update_user(user:updateUser):
     new_password = user.newPassword
     major = user.major
     degree = user.degree
-    year = user.year
+
     if(name==None or session_id==None or email==None or phone==None or new_password==None or major==None or degree==None):
         return msg.error_msg("Please check your requests.")
 
@@ -69,7 +69,6 @@ def update_user(user:updateUser):
         "Password": encrypt(new_password),
         "Major": major,
         "Degree": degree,
-        "Year": year,
         "UID": uid
     }
     ret = users.update_user(args)
