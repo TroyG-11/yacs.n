@@ -44,7 +44,7 @@
                 </b-col>
               </b-row>
               <div class="text-center mt-4">
-                <b-button variant="primary" @click="editProfile">Edit Profile</b-button>
+                <b-button variant="primary" @click="openEditModal">Edit Profile</b-button>
                 <b-button variant="danger" class="ml-2" @click="logOut">Log Out</b-button>
               </div>
             </b-card>
@@ -76,11 +76,27 @@
         </b-col>
       </b-row>
     </b-container>
+    
+    <!-- Edit Profile Modal -->
+    <b-modal v-model="showEditModal" title="Edit Profile" hide-footer>
+      <b-form @submit.prevent="saveProfile">
+        <b-form-group label="Major:" label-for="major">
+          <b-form-input id="major" v-model="editableMajor"></b-form-input>
+        </b-form-group>
+        <b-form-group label="Year:" label-for="year">
+          <b-form-input id="year" type="number" v-model="editableYear"></b-form-input>
+        </b-form-group>
+        <div class="text-right">
+          <b-button variant="secondary" @click="showEditModal = false">Cancel</b-button>
+          <b-button variant="primary" type="submit" class="ml-2">Save</b-button>
+        </div>
+      </b-form>
+    </b-modal>
   </div>
 </template>
 
 <script>
-import { mapGetters, mapActions } from "vuex";
+import { mapGetters, mapActions, mapMutations } from "vuex";
 import { userTypes } from "../store/modules/user";
 
 export default {
@@ -88,6 +104,9 @@ export default {
   data() {
     return {
       activeSection: "Profile",
+      showEditModal: false,
+      editableMajor: "",
+      editableYear: "",
       sections: [
         { name: "Profile", label: "Profile" },
         { name: "Student Information", label: "Student Information" },
@@ -114,6 +133,9 @@ export default {
   },
   methods: {
     ...mapActions([userTypes.actions.LOAD_SESSION_COOKIE]),
+    ...mapMutations({
+      updateUserInfo: userTypes.mutations.SET_USER_INFO,
+    }),
     async logOut() {
       try {
         await this.$store.dispatch(userTypes.actions.LOGOUT);
@@ -122,8 +144,20 @@ export default {
         console.error("Logout error:", err);
       }
     },
-    editProfile() {
-      alert("Edit profile feature coming soon...");
+    openEditModal() {
+      this.editableMajor = this.user.major || "";
+      this.editableYear = this.user.year || "";
+      this.showEditModal = true;
+    },
+    saveProfile() {
+      // Save updated major and year
+      this.updateUserInfo({
+        major: this.editableMajor,
+        year: this.editableYear,
+      });
+
+      // Close modal
+      this.showEditModal = false;
     },
   },
   async mounted() {
