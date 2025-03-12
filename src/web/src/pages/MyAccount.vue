@@ -150,29 +150,58 @@ export default {
         console.error("Logout error:", err);
       }
     },
+    loadUserFromStorage() {
+    const storedUser = localStorage.getItem("userProfile");
+    if (storedUser) {
+      this.updateUserInfo(JSON.parse(storedUser));
+    }
+  },
     openEditModal() {
       this.editableMajor = this.user.major || "";
       this.editableYear = this.user.year || this.currentYear;
       this.showEditModal = true;
     },
-    saveProfile() {
-      if (this.editableYear < this.currentYear) {
-        alert("Year must be the current year or later.");
-        return;
-      }
+    async saveProfile() {
+  if (this.editableYear < this.currentYear) {
+    alert("Year must be the current year or later.");
+    return;
+  }
 
-      // Save updated major and year in Vuex and localStorage
-      const updatedUser = {
-        ...this.user,
-        major: this.editableMajor,
-        year: this.editableYear,
-      };
-      this.updateUserInfo(updatedUser);
-      localStorage.setItem("userProfile", JSON.stringify(updatedUser));
+  const updatedUser = {
+    name: this.user.name || "",
+    sessionID: this.$store.state.sessionID || "",  // Make sure sessionID exists
+    email: this.user.email || "",
+    phone: this.user.phone || "",  
+    newPassword: "", // Provide an empty password if not changing it
+    major: this.editableMajor,
+    degree: this.user.degree || "",
+  };
 
-      // Close modal
-      this.showEditModal = false;
-    },
+  console.log("Sending API request with data:", updatedUser); // Debugging
+
+  try {
+    const response = await fetch("/api/user", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedUser),
+    });
+
+    const responseData = await response.json();
+    console.log("API response:", responseData); // Debugging
+
+    if (!response.ok) {
+      alert("Failed to update profile: " + (responseData.message || "Unknown error"));
+      return;
+    }
+
+    this.updateUserInfo(updatedUser);
+    localStorage.setItem("userProfile", JSON.stringify(updatedUser));
+    this.showEditModal = false;
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    alert("Something went wrong.");
+  }
+}
   },
   async mounted() {
     this.loadUserFromStorage();
