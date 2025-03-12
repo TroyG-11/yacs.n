@@ -22,6 +22,7 @@ class updateUser(BaseModel):
     newPassword:str
     major:str
     degree:str
+    year: Optional[int] = None 
 
 class UserPydantic(BaseModel):
      name: str
@@ -30,6 +31,7 @@ class UserPydantic(BaseModel):
      password: str
      major: str
      degree: str
+     year: Optional[int] = None
 
 class UserDeletePydantic(BaseModel):
     sessionID: str

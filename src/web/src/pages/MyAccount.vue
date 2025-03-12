@@ -169,12 +169,13 @@ export default {
 
   const updatedUser = {
     name: this.user.name || "",
-    sessionID: this.$store.state.sessionID || "",  // Make sure sessionID exists
+    sessionID: this.$store.state.sessionID || "",
     email: this.user.email || "",
     phone: this.user.phone || "",  
-    newPassword: "", // Provide an empty password if not changing it
+    newPassword: "", 
     major: this.editableMajor,
     degree: this.user.degree || "",
+    year: this.editableYear,
   };
 
   console.log("Sending API request with data:", updatedUser); // Debugging
@@ -201,7 +202,7 @@ export default {
     console.error("Error updating profile:", error);
     alert("Something went wrong.");
   }
-}
+},
   },
   async mounted() {
     this.loadUserFromStorage();
