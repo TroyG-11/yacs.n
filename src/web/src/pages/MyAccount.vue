@@ -59,6 +59,9 @@
                   <strong>Degree:</strong> {{ user.degree || "N/A" }}
                 </b-list-group-item>
               </b-list-group>
+              <div class="text-center mt-4">
+                <b-button variant="primary" @click="openEditModal">Edit</b-button>
+              </div>
             </b-card>
           </div>
 
@@ -71,12 +74,15 @@
                   <strong>Email:</strong> {{ user.email }}
                 </b-list-group-item>
               </b-list-group>
+              <div class="text-center mt-4">
+                <b-button variant="primary" @click="openEditModal">Edit</b-button>
+              </div>
             </b-card>
           </div>
         </b-col>
       </b-row>
     </b-container>
-    
+
     <!-- Edit Profile Modal -->
     <b-modal v-model="showEditModal" title="Edit Profile" hide-footer>
       <b-form @submit.prevent="saveProfile">
@@ -90,7 +96,13 @@
             v-model.number="editableYear"
             :min="currentYear"
           ></b-form-input>
-           </b-form-group>
+        </b-form-group>
+        <b-form-group label="Degree:" label-for="degree">
+          <b-form-input id="degree" v-model="editableDegree"></b-form-input>
+        </b-form-group>
+        <b-form-group label="Email:" label-for="email">
+          <b-form-input id="email" v-model="editableEmail"></b-form-input>
+        </b-form-group>
         <div class="text-right">
           <b-button variant="secondary" @click="showEditModal = false">Cancel</b-button>
           <b-button variant="primary" type="submit" class="ml-2">Save</b-button>
@@ -112,6 +124,8 @@ export default {
       showEditModal: false,
       editableMajor: "",
       editableYear: "",
+      editableDegree: "",
+      editableEmail: "",
       currentYear: new Date().getFullYear(),
       sections: [
         { name: "Profile", label: "Profile" },
@@ -143,70 +157,69 @@ export default {
       updateUserInfo: userTypes.mutations.SET_USER_INFO,
     }),
     async logOut() {
-    try {
-      await this.$store.dispatch(userTypes.actions.LOGOUT);
-      this.$router.replace("/");
-    } catch (err) {
-      console.error("Logout error:", err);
-    }
-  },
+      try {
+        await this.$store.dispatch(userTypes.actions.LOGOUT);
+        this.$router.replace("/");
+      } catch (err) {
+        console.error("Logout error:", err);
+      }
+    },
     loadUserFromStorage() {
-    const storedUser = localStorage.getItem("userProfile");
-    if (storedUser) {
-      this.updateUserInfo(JSON.parse(storedUser));
-    }
-  },
+      const storedUser = localStorage.getItem("userProfile");
+      if (storedUser) {
+        this.updateUserInfo(JSON.parse(storedUser));
+      }
+    },
     openEditModal() {
       this.editableMajor = this.user.major || "";
       this.editableYear = this.user.year || this.currentYear;
+      this.editableDegree = this.user.degree || "";
+      this.editableEmail = this.user.email || "";
       this.showEditModal = true;
     },
     async saveProfile() {
-  if (this.editableYear < this.currentYear) {
-    alert("Year must be the current year or later.");
-    return;
-  }
+      if (this.editableYear < this.currentYear) {
+        alert("Year must be the current year or later.");
+        return;
+      }
 
-  const updatedUser = {
-    name: this.user.name || "",
-    sessionID: this.$store.state.sessionID || "",
-    email: this.user.email || "",
-    phone: this.user.phone || "",  
-    newPassword: "", 
-    major: this.editableMajor,
-    degree: this.user.degree || "",
-    year: this.editableYear,
-  };
+      const updatedUser = {
+        name: this.user.name || "",
+        sessionID: this.$store.state.sessionID || "",
+        email: this.editableEmail || "",
+        phone: this.user.phone || "",
+        newPassword: "",
+        major: this.editableMajor,
+        degree: this.editableDegree,
+        year: this.editableYear,
+      };
 
-  console.log("Sending API request with data:", updatedUser); // Debugging
+      try {
+        const response = await fetch("/api/user", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updatedUser),
+        });
 
-  try {
-    const response = await fetch("/api/user", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updatedUser),
-    });
+        const responseData = await response.json();
 
-    const responseData = await response.json();
-    console.log("API response:", responseData); // Debugging
+        if (!response.ok) {
+          alert("Failed to update profile: " + (responseData.message || "Unknown error"));
+          return;
+        }
 
-    if (!response.ok) {
-      alert("Failed to update profile: " + (responseData.message || "Unknown error"));
-      return;
-    }
-
-    this.updateUserInfo(updatedUser);
-    localStorage.setItem("userProfile", JSON.stringify(updatedUser));
-    this.showEditModal = false;
-  } catch (error) {
-    console.error("Error updating profile:", error);
-    alert("Something went wrong.");
-  }
-},
+        this.updateUserInfo(updatedUser);
+        localStorage.setItem("userProfile", JSON.stringify(updatedUser));
+        this.showEditModal = false;
+      } catch (error) {
+        console.error("Error updating profile:", error);
+        alert("Something went wrong.");
+      }
+    },
   },
   async mounted() {
     this.loadUserFromStorage();
-
+    
     if (!this.user) {
       try {
         await this.$store.dispatch(userTypes.actions.LOAD_SESSION_COOKIE);

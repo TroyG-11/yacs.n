@@ -190,6 +190,7 @@ export default {
         this.$bvToast.toast(`You are now logged out!`, {
           variant: "success",
         });
+        this.$router.replace("/");
       } catch (err) {
         this.$bvToast.toast(err, {
           title: "Failed to logout",
