@@ -178,55 +178,57 @@ export default {
       this.showEditModal = true;
     },
     async saveProfile() {
-      if (this.editableYear < this.currentYear) {
-        alert("Year must be the current year or later.");
-        return;
-      }
+  if (this.editableYear < this.currentYear) {
+    alert("Year must be the current year or later.");
+    return;
+  }
 
-      const updatedUser = {
-        name: this.user.name || "",
-        sessionID: this.$store.state.sessionID || "",
-        email: this.editableEmail || "",
-        phone: this.user.phone || "",
-        newPassword: "",
-        major: this.editableMajor,
-        degree: this.editableDegree,
-        year: this.editableYear,
-      };
+  const originalEmail = this.user.email; 
 
-      try {
-        const response = await fetch("/api/user", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updatedUser),
-        });
+  const updatedUser = {
+    name: this.user.name || "",
+    sessionID: this.$store.state.sessionID || "",
+    email: this.editableEmail || "", 
+    phone: this.user.phone || "",
+    newPassword: "",
+    major: this.editableMajor,
+    degree: this.editableDegree,
+    year: this.editableYear,
+  };
 
-        const responseData = await response.json();
+  try {
+    const response = await fetch("/api/user", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedUser),
+    });
 
-        if (!response.ok) {
-          alert("Failed to update profile: " + (responseData.message || "Unknown error"));
-          return;
-        }
+    const responseData = await response.json();
 
-        this.updateUserInfo(updatedUser);
-        localStorage.setItem("userProfile", JSON.stringify(updatedUser));
-
-        if (this.user.email !== this.editableEmail) {
-          alert("Email changed! Please log in with your new email.");
-          await this.$store.dispatch(userTypes.actions.LOGOUT);
-          this.$router.replace("/"); 
-        } else {
-          this.showEditModal = false;
-        }
-      } catch (error) {
-        console.error("Error updating profile:", error);
-        alert("Something went wrong.");
-      }
+    if (!response.ok) {
+      alert("Failed to update profile: " + (responseData.message || "Unknown error"));
+      return;
     }
+
+    this.updateUserInfo(updatedUser);
+    localStorage.setItem("userProfile", JSON.stringify(updatedUser));
+
+    if (originalEmail !== this.editableEmail) {
+      alert("Email changed! Please log in with your new email.");
+      await this.$store.dispatch(userTypes.actions.LOGOUT);
+      this.$router.replace("/"); 
+    } else {
+      this.showEditModal = false;
+    }
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    alert("Something went wrong.");
+  }
+}
   },
   async mounted() {
     this.loadUserFromStorage();
-    
+
     if (!this.user) {
       try {
         await this.$store.dispatch(userTypes.actions.LOAD_SESSION_COOKIE);
