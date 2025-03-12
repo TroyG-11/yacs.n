@@ -210,12 +210,19 @@ export default {
 
         this.updateUserInfo(updatedUser);
         localStorage.setItem("userProfile", JSON.stringify(updatedUser));
-        this.showEditModal = false;
+
+        if (this.user.email !== this.editableEmail) {
+          alert("Email changed! Please log in with your new email.");
+          await this.$store.dispatch(userTypes.actions.LOGOUT);
+          this.$router.replace("/"); 
+        } else {
+          this.showEditModal = false;
+        }
       } catch (error) {
         console.error("Error updating profile:", error);
         alert("Something went wrong.");
       }
-    },
+    }
   },
   async mounted() {
     this.loadUserFromStorage();

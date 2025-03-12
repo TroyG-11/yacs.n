@@ -28,20 +28,20 @@ def get_user_info(session_id):
     return msg.success_msg({"uid": uid, "name": name, "email": email, "phone": phone, "major": major, "degree": degree})
 
 
-def update_user(user:updateUser):
+def update_user(user: updateUser):
     users = UserModel()
     sessions = SessionModel()
 
     name = user.name
     session_id = user.sessionID
-    email = user.email
+    email = user.email  
     phone = user.phone
     new_password = user.newPassword
     major = user.major
     degree = user.degree
     year = user.year
 
-    if(name==None or session_id==None or email==None or phone==None or new_password==None or major==None or degree==None):
+    if None in [name, session_id, email, phone, new_password, major, degree, year]:
         return msg.error_msg("Please check your requests.")
 
     if new_password.strip() == "":
@@ -53,7 +53,6 @@ def update_user(user:updateUser):
     if len(new_password) > 255:
         return msg.error_msg("Password cannot exceed 255 characters.")
 
-    # Get User according to sessionID
     session = sessions.get_session(session_id)
     if len(session) == 0:
         return msg.error_msg("Unable to find the session.")
@@ -61,11 +60,15 @@ def update_user(user:updateUser):
     (sessionid, uid, start_time, end_time) = session[0].values()
 
     if end_time is not None:
-        return msg.error_msg("This session already canceled.")
+        return msg.error_msg("This session has already ended.")
+
+    existing_user = users.get_user(email=email)
+    if existing_user and existing_user[0]['user_id'] != uid:
+        return msg.error_msg("Email is already in use by another account.")
 
     args = {
         "Name": name,
-        "Email": email,
+        "Email": email, 
         "Phone": phone,
         "Password": encrypt(new_password),
         "Major": major,
@@ -73,12 +76,13 @@ def update_user(user:updateUser):
         "Year": year,
         "UID": uid
     }
+    
     ret = users.update_user(args)
 
     if ret is None:
         return msg.error_msg("Failed to update user profile.")
 
-    return msg.success_msg({})
+    return msg.success_msg({"email": email}) 
 
 
 def delete_user(form):

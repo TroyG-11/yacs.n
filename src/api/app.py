@@ -267,11 +267,16 @@ async def delete_user(request: Request, session: UserDeletePydantic):
     return user_controller.delete_user(session.dict())
 
 @app.put('/api/user')
-async def update_user_info(request:Request, user:updateUser):
+async def update_user_info(request: Request, user: updateUser):
     if 'user' not in request.session:
         return Response("Not authorized", status_code=403)
 
-    return user_controller.update_user(user)
+    response = user_controller.update_user(user)
+
+    if response["success"]:
+        request.session['user']['email'] = user.email
+
+    return response
 
 @app.post('/api/session')
 async def log_in(request: Request, credentials: SessionPydantic):

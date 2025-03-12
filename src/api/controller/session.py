@@ -40,13 +40,12 @@ def add_session(form):
     sessions = SessionModel()
     users = UserModel()
 
-    (email, password) = (form['email'], form['password'])
+    email = form['email']
+    password = encrypt(form['password']) 
 
-    users_founded = users.get_user(email=email, password=encrypt(password), enable=True)
-    if users_founded == None:
-        return msg.error_msg("Failed to validate user information.")
-
-    if len(users_founded) == 0:
+    users_founded = users.get_user(email=email, password=password, enable=True)
+    
+    if users_founded is None or len(users_founded) == 0:
         return msg.error_msg("Invalid email address or password.")
 
     uid = users_founded[0]['user_id']
@@ -55,12 +54,13 @@ def add_session(form):
 
     res = sessions.start_session(new_session_id, uid, start_time)
 
-    if res == None:
+    if res is None:
         return msg.error_msg("Failed to start a new session.")
 
     return msg.success_msg({
         "sessionID": new_session_id, 
         "uid": uid, 
         "startTime": str(start_time),
-        "userName" : users_founded[0]['name']
-        })
+        "userName": users_founded[0]['name'],
+        "email": users_founded[0]['email']  # Ensure the updated email is returned
+    })
