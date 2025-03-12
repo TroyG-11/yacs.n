@@ -143,13 +143,13 @@ export default {
       updateUserInfo: userTypes.mutations.SET_USER_INFO,
     }),
     async logOut() {
-      try {
-        await this.$store.dispatch(userTypes.actions.LOGOUT);
-        this.$router.push("/");
-      } catch (err) {
-        console.error("Logout error:", err);
-      }
-    },
+    try {
+      await this.$store.dispatch(userTypes.actions.LOGOUT);
+      this.$router.replace("/");
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+  },
     loadUserFromStorage() {
     const storedUser = localStorage.getItem("userProfile");
     if (storedUser) {
