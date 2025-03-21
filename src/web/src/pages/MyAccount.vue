@@ -129,6 +129,7 @@ export default {
     return {
       activeSection: "Profile",
       showEditModal: false,
+      editableName: "",
       editableMajor: "",
       editableYear: "",
       editableDegree: "",
@@ -178,6 +179,7 @@ export default {
       }
     },
     openEditModal() {
+      this.editableName = this.user.name || "";
       this.editableMajor = this.user.major || "";
       this.editableYear = this.user.year || this.currentYear;
       this.editableDegree = this.user.degree || "";
@@ -193,9 +195,9 @@ export default {
   const originalEmail = this.user.email; 
 
   const updatedUser = {
-    name: this.user.name || "",
+    name: this.editableName || "",
     sessionID: this.$store.state.sessionID || "",
-    email: this.editableEmail || "", 
+    email: this.editableEmail || "",
     phone: this.user.phone || "",
     newPassword: "",
     major: this.editableMajor,
