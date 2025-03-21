@@ -33,6 +33,10 @@
                 <b-col md="8">
                   <b-list-group class="info-list">
                     <b-list-group-item class="info-item">
+                    <b-icon icon="person-fill" class="mr-2"></b-icon>
+                    <strong>Full Name:</strong> {{ user.name || "N/A" }}
+                  </b-list-group-item>
+                    <b-list-group-item class="info-item">
                       <b-icon icon="school" class="mr-2"></b-icon>
                       <strong>Major:</strong> {{ user.major || "Not specified" }}
                     </b-list-group-item>
@@ -86,6 +90,9 @@
     <!-- Edit Profile Modal -->
     <b-modal v-model="showEditModal" title="Edit Profile" hide-footer>
       <b-form @submit.prevent="saveProfile">
+        <b-form-group label="Full Name:" label-for="full-name">
+        <b-form-input id="full-name" v-model="editableName"></b-form-input>
+      </b-form-group>
         <b-form-group label="Major:" label-for="major">
           <b-form-input id="major" v-model="editableMajor"></b-form-input>
         </b-form-group>
