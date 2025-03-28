@@ -49,17 +49,18 @@ class User(Model):
         args = (uid,uid)
         return self.db.execute(sql, args, False)[0]
 
-    def update_user(self, args):
+def update_user(self, args):
         sql = """   UPDATE
                         public.user_account
                     SET
-                        name        = %(Name)s,
-                        email       = %(Email)s,
-                        phone       = %(Phone)s,
-                        password    = %(Password)s,
-                        major       = %(Major)s,
-                        degree      = %(Degree)s
+                        name     = %(Name)s,
+                        email    = %(Email)s,
+                        phone    = %(Phone)s,
+                        password = %(Password)s,
+                        major    = %(Major)s,
+                        degree   = %(Degree)s,
+                        year     = %(Year)s
                     WHERE
                         user_id = %(UID)s;
-                    """
+                """
         return self.db.execute(sql, args, False)[0]

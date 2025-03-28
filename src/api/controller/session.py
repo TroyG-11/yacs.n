@@ -62,5 +62,5 @@ def add_session(form):
         "uid": uid, 
         "startTime": str(start_time),
         "userName": users_founded[0]['name'],
-        "email": users_founded[0]['email']  # Ensure the updated email is returned
+        "email": users_founded[0]['email'] 
     })
