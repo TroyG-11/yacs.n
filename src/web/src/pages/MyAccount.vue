@@ -86,7 +86,42 @@
         </b-col>
       </b-row>
     </b-container>
-
+    
+      <!-- Website Theme Section -->
+      <div v-if="activeSection === 'Website Theme'">
+        <b-container fluid>
+          <b-row class="justify-content-center">
+            <b-col md="6">
+              <b-card class="profile-card text-center">
+                <h5>Choose a Theme:</h5>
+                <b-button-group class="mt-3">
+                  <b-button
+                    variant="outline-secondary"
+                    :class="{ active: darkMode === false }"
+                    @click="toggleTheme(false)"
+                  >
+                    Light Mode
+                  </b-button>
+                  <b-button
+                    variant="outline-secondary"
+                    :class="{ active: darkMode === true }"
+                    @click="toggleTheme(true)"
+                  >
+                    Dark Mode
+                  </b-button>
+                  <b-button
+                    variant="outline-secondary"
+                    :class="{ active: darkMode === null }"
+                    @click="followDeviceTheme"
+                  >
+                    Follow Device
+                  </b-button>
+                </b-button-group>
+              </b-card>
+            </b-col>
+          </b-row>
+        </b-container>
+      </div>
     <!-- Edit Profile Modal -->
     <b-modal v-model="showEditModal" title="Edit Profile" hide-footer>
       <b-form @submit.prevent="saveProfile">
@@ -122,6 +157,11 @@
 <script>
 import { mapGetters, mapActions, mapMutations } from "vuex";
 import { userTypes } from "../store/modules/user";
+import {
+  TOGGLE_DARK_MODE,
+  SAVE_DARK_MODE,
+  RESET_DARK_MODE,
+} from "@/store";
 
 export default {
   name: "MyAccount",
@@ -139,6 +179,7 @@ export default {
         { name: "Profile", label: "Profile" },
         { name: "Student Information", label: "Student Information" },
         { name: "Settings", label: "Settings" },
+        { name: "Website Theme", label: "Website Theme" },
       ],
     };
   },
@@ -171,6 +212,28 @@ export default {
       } catch (err) {
         console.error("Logout error:", err);
       }
+    },
+        toggleTheme(mode) {
+      const deviceTheme = window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+      if (
+        (mode === false && this.darkMode === true) ||
+        (mode === true && this.darkMode === false) ||
+        (this.darkMode == null && mode !== deviceTheme)
+      ) {
+        this.$store.commit(TOGGLE_DARK_MODE);
+        this.$store.commit(SAVE_DARK_MODE);
+      } else {
+        this.$store.commit(SAVE_DARK_MODE);
+      }
+
+      this.darkMode = this.$store.getters.darkModeState;
+    },
+
+    followDeviceTheme() {
+      this.$store.commit(RESET_DARK_MODE);
+      this.$store.commit(TOGGLE_DARK_MODE);
+      this.darkMode = null;
     },
     loadUserFromStorage() {
       const storedUser = localStorage.getItem("userProfile");
