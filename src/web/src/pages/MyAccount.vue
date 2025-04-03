@@ -2,6 +2,38 @@
   <div :class="['account-container', darkMode ? 'dark-mode' : 'light-mode']">
     <b-container fluid>
       <b-row>
+        <!-- Schedules Section -->
+        <div v-if="activeSection === 'Schedules'">
+          <b-card class="profile-card">
+            <h4 class="mb-3">Schedules</h4>
+            <b-list-group>
+              <b-list-group-item
+                v-for="(schedule, index) in savedSchedules"
+                :key="index"
+                class="d-flex justify-content-between align-items-center"
+              >
+                <div>
+                  <strong>{{ schedule.name }}</strong><br />
+                  <small>{{ schedule.courses.join(', ') }}</small>
+                </div>
+                <div>
+                  <b-button size="sm" variant="primary" @click="applySchedule(index)">Load</b-button>
+                  <b-button size="sm" variant="danger" class="ml-2" @click="deleteSchedule(index)">Delete</b-button>
+                </div>
+              </b-list-group-item>
+            </b-list-group>
+
+            <div class="mt-4">
+              <b-form @submit.prevent="saveNewSchedule">
+                <b-form-group label="New Schedule Name">
+                  <b-form-input v-model="newScheduleName" placeholder="e.g. Fall 2025 Draft"></b-form-input>
+                </b-form-group>
+                <b-button type="submit" variant="success">Save Current Schedule</b-button>
+              </b-form>
+            </div>
+          </b-card>
+        </div>
+
         <!-- Sidebar Navigation -->
         <b-col md="3" class="sidebar">
           <h3 class="sidebar-title">My Account</h3>
@@ -83,45 +115,46 @@
               </div>
             </b-card>
           </div>
+          <!-- Website Theme Section -->
+          <div v-if="activeSection === 'Website Theme'">
+            <b-container fluid>
+              <b-row class="justify-content-center">
+                <b-col md="6">
+                  <b-card class="profile-card text-center">
+                    <h5>Choose a Theme:</h5>
+                    <b-button-group class="mt-3">
+                      <b-button
+                        variant="outline-secondary"
+                        :class="{ active: darkMode === false }"
+                        @click="toggleTheme(false)"
+                      >
+                        Light Mode
+                      </b-button>
+                      <b-button
+                        variant="outline-secondary"
+                        :class="{ active: darkMode === true }"
+                        @click="toggleTheme(true)"
+                      >
+                        Dark Mode
+                      </b-button>
+                      <b-button
+                        variant="outline-secondary"
+                        :class="{ active: darkMode === null }"
+                        @click="followDeviceTheme"
+                      >
+                        Follow Device
+                      </b-button>
+                    </b-button-group>
+                  </b-card>
+                </b-col>
+              </b-row>
+            </b-container>
+          </div>
+
         </b-col>
       </b-row>
     </b-container>
-    
-      <!-- Website Theme Section -->
-      <div v-if="activeSection === 'Website Theme'">
-        <b-container fluid>
-          <b-row class="justify-content-center">
-            <b-col md="6">
-              <b-card class="profile-card text-center">
-                <h5>Choose a Theme:</h5>
-                <b-button-group class="mt-3">
-                  <b-button
-                    variant="outline-secondary"
-                    :class="{ active: darkMode === false }"
-                    @click="toggleTheme(false)"
-                  >
-                    Light Mode
-                  </b-button>
-                  <b-button
-                    variant="outline-secondary"
-                    :class="{ active: darkMode === true }"
-                    @click="toggleTheme(true)"
-                  >
-                    Dark Mode
-                  </b-button>
-                  <b-button
-                    variant="outline-secondary"
-                    :class="{ active: darkMode === null }"
-                    @click="followDeviceTheme"
-                  >
-                    Follow Device
-                  </b-button>
-                </b-button-group>
-              </b-card>
-            </b-col>
-          </b-row>
-        </b-container>
-      </div>
+  
     <!-- Edit Profile Modal -->
     <b-modal v-model="showEditModal" title="Edit Profile" hide-footer>
       <b-form @submit.prevent="saveProfile">
@@ -167,6 +200,8 @@ export default {
   name: "MyAccount",
   data() {
     return {
+      savedSchedules: JSON.parse(localStorage.getItem('savedSchedules') || '[]'),
+      newScheduleName: "",
       activeSection: "Profile",
       showEditModal: false,
       editableName: "",
@@ -176,6 +211,7 @@ export default {
       editableEmail: "",
       currentYear: new Date().getFullYear(),
       sections: [
+        { name: "Schedules", label: "Schedules" },
         { name: "Profile", label: "Profile" },
         { name: "Student Information", label: "Student Information" },
         { name: "Settings", label: "Settings" },
