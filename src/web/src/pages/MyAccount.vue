@@ -241,6 +241,34 @@ export default {
     ...mapMutations({
       updateUserInfo: userTypes.mutations.SET_USER_INFO,
     }),
+      saveNewSchedule() {
+    if (!this.newScheduleName) {
+      alert("Please enter a name for your schedule.");
+      return;
+    }
+
+    const currentCourses = this.getCurrentSchedule();
+    const newSchedule = {
+      name: this.newScheduleName,
+      courses: currentCourses,
+    };
+
+    this.savedSchedules.push(newSchedule);
+    localStorage.setItem("savedSchedules", JSON.stringify(this.savedSchedules));
+    this.newScheduleName = "";
+  },
+
+  applySchedule(index) {
+    const schedule = this.savedSchedules[index];
+    this.setCurrentSchedule(schedule.courses); // <- Replace this
+    alert(`Schedule "${schedule.name}" loaded.`);
+  },
+
+  deleteSchedule(index) {
+    this.savedSchedules.splice(index, 1);
+    localStorage.setItem("savedSchedules", JSON.stringify(this.savedSchedules));
+  },
+
     async logOut() {
       try {
         await this.$store.dispatch(userTypes.actions.LOGOUT);
