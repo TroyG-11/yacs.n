@@ -220,6 +220,11 @@ export default {
   name: "MyAccount",
   data() {
     return {
+      searchQuery: "",
+      newScheduleNotes: "",
+      renameIndex: null,
+      renameValue: "",
+      importFile: null,
       savedSchedules: JSON.parse(localStorage.getItem('savedSchedules') || '[]'),
       newScheduleName: "",
       activeSection: "Profile",
@@ -245,6 +250,12 @@ export default {
       isLoggedIn: userTypes.getters.IS_LOGGED_IN,
       darkMode: "darkModeState",
     }),
+    filteredSchedules() {
+      if (!this.searchQuery) return this.savedSchedules;
+      return this.savedSchedules.filter(s =>
+        s.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+      );
+    },
     userInitials() {
       if (this.user && this.user.name) {
         return this.user.name
