@@ -6,19 +6,31 @@
         <div v-if="activeSection === 'Schedules'">
           <b-card class="profile-card">
             <h4 class="mb-3">Schedules</h4>
+
+            <!-- Search Bar -->
+            <b-form-input
+              v-model="searchQuery"
+              placeholder="Search schedules..."
+              class="mb-3"
+            />
+
             <b-list-group>
               <b-list-group-item
-                v-for="(schedule, index) in savedSchedules"
+                v-for="(schedule, index) in filteredSchedules"
                 :key="index"
                 class="d-flex justify-content-between align-items-center"
               >
                 <div>
                   <strong>{{ schedule.name }}</strong><br />
-                  <small>{{ schedule.courses.join(', ') }}</small>
+                  <small>{{ schedule.courses.join(', ') }}</small><br />
+                  <small class="text-muted">{{ schedule.notes || 'No notes' }}</small>
                 </div>
                 <div>
                   <b-button size="sm" variant="primary" @click="applySchedule(index)">Load</b-button>
-                  <b-button size="sm" variant="danger" class="ml-2" @click="deleteSchedule(index)">Delete</b-button>
+                  <b-button size="sm" variant="danger" class="ml-1" @click="deleteSchedule(index)">Delete</b-button>
+                  <b-button size="sm" variant="warning" class="ml-1" @click="startRenaming(index)">Rename</b-button>
+                  <b-button size="sm" variant="secondary" class="ml-1" @click="moveSchedule(index, -1)" :disabled="index === 0">↑</b-button>
+                  <b-button size="sm" variant="secondary" class="ml-1" @click="moveSchedule(index, 1)" :disabled="index === savedSchedules.length - 1">↓</b-button>
                 </div>
               </b-list-group-item>
             </b-list-group>
@@ -28,8 +40,16 @@
                 <b-form-group label="New Schedule Name">
                   <b-form-input v-model="newScheduleName" placeholder="e.g. Fall 2025 Draft"></b-form-input>
                 </b-form-group>
+                <b-form-group label="Notes (optional)">
+                  <b-form-textarea v-model="newScheduleNotes" rows="2" placeholder="e.g. Avoid Friday classes, focus on CS core."></b-form-textarea>
+                </b-form-group>
                 <b-button type="submit" variant="success">Save Current Schedule</b-button>
               </b-form>
+            </div>
+
+            <div class="mt-4">
+              <b-button variant="info" size="sm" class="mr-2" @click="exportSchedules">Export</b-button>
+              <b-form-file v-model="importFile" @change="importSchedules" accept=".json" browse-text="Import" size="sm" />
             </div>
           </b-card>
         </div>
