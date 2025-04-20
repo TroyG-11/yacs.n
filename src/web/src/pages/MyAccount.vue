@@ -31,6 +31,7 @@
                   <b-button size="sm" variant="warning" class="ml-1" @click="startRenaming(index)">Rename</b-button>
                   <b-button size="sm" variant="secondary" class="ml-1" @click="moveSchedule(index, -1)" :disabled="index === 0">↑</b-button>
                   <b-button size="sm" variant="secondary" class="ml-1" @click="moveSchedule(index, 1)" :disabled="index === savedSchedules.length - 1">↓</b-button>
+                  <b-button size="sm" variant="info" class="ml-1" @click="prepareShareSchedule(index)">Share</b-button>
                 </div>
               </b-list-group-item>
             </b-list-group>
@@ -223,6 +224,27 @@
         </div>
       </b-form>
     </b-modal>
+
+    <!-- Share Schedule Modal -->
+    <b-modal v-model="showShareModal" title="Share Schedule" hide-footer>
+      <div v-if="shareLink">
+        <b-form-group label="Shareable Link:">
+          <b-form-input readonly v-model="shareLink" class="mb-2"></b-form-input>
+        </b-form-group>
+        <b-button variant="success" @click="copyToClipboard" class="mr-2">
+          <b-icon icon="clipboard"></b-icon> Copy Link
+        </b-button>
+        <b-button variant="primary" @click="sendViaEmail">
+          <b-icon icon="envelope"></b-icon> Email
+        </b-button>
+        <div class="mt-3">
+          <small class="text-muted">This link will expire in 30 days</small>
+        </div>
+      </div>
+      <div v-else>
+        <b-spinner label="Generating link..."></b-spinner>
+      </div>
+    </b-modal>
   </div>
 </template>
 
@@ -248,6 +270,9 @@ export default {
       newScheduleName: "",
       activeSection: "Profile",
       showEditModal: false,
+      showShareModal: false,
+      shareLink: "",
+      currentlySharingIndex: null,
       editableName: "",
       editableMajor: "",
       editableYear: "",
@@ -300,33 +325,72 @@ export default {
     ...mapMutations({
       updateUserInfo: userTypes.mutations.SET_USER_INFO,
     }),
-      saveNewSchedule() {
-    if (!this.newScheduleName) {
-      alert("Please enter a name for your schedule.");
-      return;
-    }
+    saveNewSchedule() {
+      if (!this.newScheduleName) {
+        alert("Please enter a name for your schedule.");
+        return;
+      }
 
-    const currentCourses = this.getCurrentSchedule();
-    const newSchedule = {
-      name: this.newScheduleName,
-      courses: currentCourses,
-    };
+      const currentCourses = this.getCurrentSchedule();
+      const newSchedule = {
+        name: this.newScheduleName,
+        courses: currentCourses,
+      };
 
-    this.savedSchedules.push(newSchedule);
-    localStorage.setItem("savedSchedules", JSON.stringify(this.savedSchedules));
-    this.newScheduleName = "";
-  },
+      this.savedSchedules.push(newSchedule);
+      localStorage.setItem("savedSchedules", JSON.stringify(this.savedSchedules));
+      this.newScheduleName = "";
+    },
 
-  applySchedule(index) {
-    const schedule = this.savedSchedules[index];
-    this.setCurrentSchedule(schedule.courses); // <- Replace this
-    alert(`Schedule "${schedule.name}" loaded.`);
-  },
+    applySchedule(index) {
+      const schedule = this.savedSchedules[index];
+      this.setCurrentSchedule(schedule.courses); // <- Replace this
+      alert(`Schedule "${schedule.name}" loaded.`);
+    },
 
-  deleteSchedule(index) {
-    this.savedSchedules.splice(index, 1);
-    localStorage.setItem("savedSchedules", JSON.stringify(this.savedSchedules));
-  },
+    deleteSchedule(index) {
+      this.savedSchedules.splice(index, 1);
+      localStorage.setItem("savedSchedules", JSON.stringify(this.savedSchedules));
+    },
+
+    prepareShareSchedule(index) {
+      this.currentlySharingIndex = index;
+      this.showShareModal = true;
+      this.shareLink = "";
+      
+      // Simulate API call to generate shareable link
+      setTimeout(() => {
+        const schedule = this.savedSchedules[index];
+        const encoded = btoa(JSON.stringify(schedule));
+        this.shareLink = `${window.location.origin}/shared/${encoded}`;
+      }, 1000);
+    },
+
+    copyToClipboard() {
+      navigator.clipboard.writeText(this.shareLink)
+        .then(() => {
+          this.$bvToast.toast('Link copied to clipboard!', {
+            title: 'Success',
+            variant: 'success',
+            autoHideDelay: 3000,
+            solid: true
+          });
+        })
+        .catch(() => {
+          this.$bvToast.toast('Failed to copy link', {
+            title: 'Error',
+            variant: 'danger',
+            autoHideDelay: 3000,
+            solid: true
+          });
+        });
+    },
+
+    sendViaEmail() {
+      const subject = `Check out my schedule: ${this.savedSchedules[this.currentlySharingIndex].name}`;
+      const body = `I wanted to share my course schedule with you:\n\n${this.shareLink}`;
+      window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    },
 
     async logOut() {
       try {
@@ -336,7 +400,7 @@ export default {
         console.error("Logout error:", err);
       }
     },
-        toggleTheme(mode) {
+    toggleTheme(mode) {
       const deviceTheme = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
       if (
@@ -373,53 +437,53 @@ export default {
       this.showEditModal = true;
     },
     async saveProfile() {
-  if (this.editableYear < this.currentYear) {
-    alert("Year must be the current year or later.");
-    return;
-  }
+      if (this.editableYear < this.currentYear) {
+        alert("Year must be the current year or later.");
+        return;
+      }
 
-  const originalEmail = this.user.email; 
+      const originalEmail = this.user.email; 
 
-  const updatedUser = {
-    name: this.editableName || "",
-    sessionID: this.$store.state.sessionID || "",
-    email: this.editableEmail || "",
-    phone: this.user.phone || "",
-    newPassword: "",
-    major: this.editableMajor,
-    degree: this.editableDegree,
-    year: this.editableYear,
-  };
+      const updatedUser = {
+        name: this.editableName || "",
+        sessionID: this.$store.state.sessionID || "",
+        email: this.editableEmail || "",
+        phone: this.user.phone || "",
+        newPassword: "",
+        major: this.editableMajor,
+        degree: this.editableDegree,
+        year: this.editableYear,
+      };
 
-  try {
-    const response = await fetch("/api/user", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updatedUser),
-    });
+      try {
+        const response = await fetch("/api/user", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updatedUser),
+        });
 
-    const responseData = await response.json();
+        const responseData = await response.json();
 
-    if (!response.ok) {
-      alert("Failed to update profile: " + (responseData.message || "Unknown error"));
-      return;
+        if (!response.ok) {
+          alert("Failed to update profile: " + (responseData.message || "Unknown error"));
+          return;
+        }
+
+        this.updateUserInfo(updatedUser);
+        localStorage.setItem("userProfile", JSON.stringify(updatedUser));
+
+        if (originalEmail !== this.editableEmail) {
+          alert("Email changed! Please log in with your new email.");
+          await this.$store.dispatch(userTypes.actions.LOGOUT);
+          this.$router.replace("/"); 
+        } else {
+          this.showEditModal = false;
+        }
+      } catch (error) {
+        console.error("Error updating profile:", error);
+        alert("Something went wrong.");
+      }
     }
-
-    this.updateUserInfo(updatedUser);
-    localStorage.setItem("userProfile", JSON.stringify(updatedUser));
-
-    if (originalEmail !== this.editableEmail) {
-      alert("Email changed! Please log in with your new email.");
-      await this.$store.dispatch(userTypes.actions.LOGOUT);
-      this.$router.replace("/"); 
-    } else {
-      this.showEditModal = false;
-    }
-  } catch (error) {
-    console.error("Error updating profile:", error);
-    alert("Something went wrong.");
-  }
-}
   },
   async mounted() {
     this.loadUserFromStorage();
@@ -548,5 +612,10 @@ export default {
 .stat-label {
   font-size: 0.9rem;
   color: var(--text-muted);
+}
+
+/* Share Button Styles */
+.share-btn {
+  min-width: 80px;
 }
 </style>
