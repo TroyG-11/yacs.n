@@ -51,6 +51,25 @@
               <b-button variant="info" size="sm" class="mr-2" @click="exportSchedules">Export</b-button>
               <b-form-file v-model="importFile" @change="importSchedules" accept=".json" browse-text="Import" size="sm" />
             </div>
+
+            <!-- Schedule Statistics Card -->
+            <b-card class="mt-3 stats-card">
+              <h5>Schedule Statistics</h5>
+              <b-row class="text-center">
+                <b-col>
+                  <div class="stat-value">{{ savedSchedules.length }}</div>
+                  <div class="stat-label">Total Schedules</div>
+                </b-col>
+                <b-col>
+                  <div class="stat-value">{{ totalCourses }}</div>
+                  <div class="stat-label">Total Courses</div>
+                </b-col>
+                <b-col>
+                  <div class="stat-value">{{ averageCourses }}</div>
+                  <div class="stat-label">Avg Courses/Schedule</div>
+                </b-col>
+              </b-row>
+            </b-card>
           </b-card>
         </div>
 
@@ -265,6 +284,15 @@ export default {
           .toUpperCase();
       }
       return "?";
+    },
+    totalCourses() {
+      return this.savedSchedules.reduce((total, schedule) => 
+        total + (schedule.courses ? schedule.courses.length : 0), 0);
+    },
+    averageCourses() {
+      return this.savedSchedules.length > 0 
+        ? (this.totalCourses / this.savedSchedules.length).toFixed(1)
+        : 0;
     },
   },
   methods: {
@@ -505,5 +533,20 @@ export default {
 .username {
   font-size: 1.4rem;
   font-weight: bold;
+}
+
+/* Stats Card Styles */
+.stats-card {
+  background: var(--card-background);
+  margin-top: 20px;
+}
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: var(--primary);
+}
+.stat-label {
+  font-size: 0.9rem;
+  color: var(--text-muted);
 }
 </style>
