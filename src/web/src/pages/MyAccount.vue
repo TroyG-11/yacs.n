@@ -72,6 +72,59 @@
               </b-row>
             </b-card>
           </b-card>
+                <!-- Analytics Section -->
+      <b-button variant="info" class="mt-3" @click="toggleAnalytics">
+        {{ showAnalytics ? 'Hide Analytics' : 'Show Analytics' }}
+      </b-button>
+
+      <div v-if="showAnalytics" class="analytics-section mt-3">
+        <b-row>
+          <b-col md="6">
+            <b-card class="chart-card">
+              <h5>Courses per Schedule</h5>
+              <div class="chart-container">
+                <BarChart :data="scheduleChartData" :options="chartOptions" />
+              </div>
+            </b-card>
+          </b-col>
+          <b-col md="6">
+            <b-card class="chart-card">
+              <h5>Most Popular Courses</h5>
+              <div class="chart-container">
+                <PieChart :data="popularCoursesChartData" :options="chartOptions" />
+              </div>
+            </b-card>
+          </b-col>
+        </b-row>
+        
+        <b-card class="mt-3">
+          <h5>Schedule Timeline</h5>
+          <b-list-group>
+            <b-list-group-item 
+              v-for="(schedule, index) in savedSchedules" 
+              :key="index"
+              class="timeline-item"
+            >
+              <div class="timeline-content">
+                <strong>{{ schedule.name }}</strong>
+                <small class="text-muted float-right">
+                  {{ schedule.courses.length }} courses
+                </small>
+                <div class="progress mt-2">
+                  <div 
+                    class="progress-bar" 
+                    role="progressbar" 
+                    :style="{ width: (schedule.courses.length / Math.max(...savedSchedules.map(s => s.courses.length)) * 100) + '%' }"
+                    :aria-valuenow="schedule.courses.length"
+                    aria-valuemin="0"
+                    :aria-valuemax="Math.max(...savedSchedules.map(s => s.courses.length))"
+                  ></div>
+                </div>
+              </div>
+            </b-list-group-item>
+          </b-list-group>
+        </b-card>
+      </div>
         </div>
 
         <!-- Sidebar Navigation -->
@@ -256,9 +309,34 @@ import {
   SAVE_DARK_MODE,
   RESET_DARK_MODE,
 } from "@/store";
+import { Bar, Pie } from 'vue-chartjs';
+import { 
+  Chart as ChartJS,
+  Title,
+  Tooltip,
+  Legend,
+  BarElement,
+  ArcElement,
+  CategoryScale,
+  LinearScale
+} from 'chart.js';
+
+ChartJS.register(
+  Title,
+  Tooltip,
+  Legend,
+  BarElement,
+  ArcElement,
+  CategoryScale,
+  LinearScale
+);
 
 export default {
   name: "MyAccount",
+  components: {
+  BarChart: Bar,
+  PieChart: Pie
+},
   data() {
     return {
       searchQuery: "",
@@ -286,6 +364,36 @@ export default {
         { name: "Settings", label: "Settings" },
         { name: "Website Theme", label: "Website Theme" },
       ],
+      chartOptions: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'top',
+        },
+      }
+    },
+    scheduleChartData: {
+      labels: [],
+      datasets: [
+        {
+          label: 'Courses per Schedule',
+          backgroundColor: '#42b983',
+          data: []
+        }
+      ]
+    },
+    popularCoursesChartData: {
+      labels: [],
+      datasets: [
+        {
+          label: 'Most Used Courses',
+          backgroundColor: ['#41B883', '#E46651', '#00D8FF', '#DD1B16', '#FFC107'],
+          data: []
+        }
+      ]
+    },
+    showAnalytics: false,
     };
   },
   computed: {
@@ -319,6 +427,28 @@ export default {
         ? (this.totalCourses / this.savedSchedules.length).toFixed(1)
         : 0;
     },
+    chartData() {
+    return {
+      labels: this.savedSchedules.map(s => s.name),
+      datasets: [{
+        label: 'Number of Courses',
+        backgroundColor: '#42b983',
+        data: this.savedSchedules.map(s => s.courses.length)
+      }]
+    };
+  },
+  popularCourses() {
+    const courseCounts = {};
+    this.savedSchedules.forEach(schedule => {
+      schedule.courses.forEach(course => {
+        courseCounts[course] = (courseCounts[course] || 0) + 1;
+      });
+    });
+
+    return Object.entries(courseCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+  },
   },
   methods: {
     ...mapActions([userTypes.actions.LOAD_SESSION_COOKIE]),
@@ -436,6 +566,34 @@ export default {
       this.editableEmail = this.user.email || "";
       this.showEditModal = true;
     },
+      updateCharts() {
+    this.scheduleChartData = {
+      labels: this.savedSchedules.map(s => s.name),
+      datasets: [{
+        label: 'Courses per Schedule',
+        backgroundColor: '#42b983',
+        data: this.savedSchedules.map(s => s.courses.length)
+      }]
+    };
+
+    this.popularCoursesChartData = {
+      labels: this.popularCourses.map(c => c[0]),
+      datasets: [{
+        label: 'Usage Count',
+        backgroundColor: ['#41B883', '#E46651', '#00D8FF', '#DD1B16', '#FFC107'],
+        data: this.popularCourses.map(c => c[1])
+      }]
+    };
+  },
+
+  toggleAnalytics() {
+    this.showAnalytics = !this.showAnalytics;
+    if (this.showAnalytics) {
+      this.$nextTick(() => {
+        this.updateCharts();
+      });
+    }
+  },
     async saveProfile() {
       if (this.editableYear < this.currentYear) {
         alert("Year must be the current year or later.");
@@ -617,5 +775,42 @@ export default {
 /* Share Button Styles */
 .share-btn {
   min-width: 80px;
+}
+
+.chart-card {
+  background: var(--card-background);
+  color: var(--text-color);
+  height: 100%;
+}
+
+.chart-container {
+  position: relative;
+  height: 300px;
+  width: 100%;
+}
+
+.analytics-section {
+  background: var(--card-background);
+  padding: 20px;
+  border-radius: 10px;
+  margin-top: 20px;
+}
+
+.timeline-item {
+  background: var(--card-background);
+  border-color: var(--border-color);
+}
+
+.progress {
+  background-color: var(--border-color);
+  height: 10px;
+}
+
+.progress-bar {
+  background-color: #42b983;
+}
+
+.timeline-content {
+  width: 100%;
 }
 </style>
